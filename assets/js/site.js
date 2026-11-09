@@ -72,6 +72,9 @@
   var pageDirty = true;
   var particles = [];                   // ink debris, sparks, paper scraps
   var smoke = [], rings = [], flashes = [], glyphs = [];
+  var monsters = [], groups = [];       // letter monsters and letters flying together to form one
+  var note = "", noteUntil = 0, monstersFormed = 0;
+  var visible = true;
   var shake = 0;
   var running = false, last = 0;
   var blasts = 0;
@@ -218,14 +221,8 @@
       }
     }
     ctx.textBaseline = "middle"; ctx.textAlign = "center";
-    for (i = 0; i < glyphs.length; i++) {
-      q = glyphs[i];
-      ctx.save(); ctx.translate(q.x, q.y); ctx.rotate(q.rot);
-      ctx.font = "700 " + q.size + "px " + bodyFont;
-      ctx.fillStyle = css(colors.ink, Math.min(1, q.life * 1.5));
-      ctx.fillText(q.ch, 0, 0);
-      ctx.restore();
-    }
+    for (i = 0; i < glyphs.length; i++) drawLetter(glyphs[i], 1);
+    for (i = 0; i < monsters.length; i++) drawMonster(monsters[i]);
     ctx.textAlign = "start"; ctx.textBaseline = "alphabetic";
     for (i = 0; i < flashes.length; i++) {
       q = flashes[i];
@@ -251,9 +248,219 @@
     if (hover.on && finePointer) drawBomb(hover.x, hover.y, now);
   }
 
+  /* ----- letters and letter monsters (the Paper Blast rules, in miniature) -----
+     Blasted letters fly, land on lines of text (text is the platform) or the page's bottom edge,
+     and fall again if a blast removes what they stand on. A letter that has rested for a moment
+     calls nearby resting letters: with enough of them they fly together into a monster;
+     otherwise it bakes back into the page as new ink, which is new platform. */
+  var FLOOR = H - 3;
+  var GATHER_DELAY = 1.1, GATHER_RADIUS = 95, MIN_GROUP = 5, MAX_GROUP = 9, BAKE_AFTER = 4.5, MAX_MONSTERS = 3;
+  // monster body slots relative to its feet; legs first, then body, then head
+  var MS = 13;                          // monster letter size
+  var SLOTS = [[-5, -5], [5, -5], [0, -14], [-9, -13], [9, -13], [0, -23], [-8, -22], [8, -22], [0, -31]];
+
+  function solid(lx, ly) {
+    if (ly >= FLOOR) return true;
+    if (lx < 0 || lx >= W || ly < 0) return false;
+    var i = ((ly * SC) | 0) * BW + ((lx * SC) | 0);
+    return paper[i] === 1 && ink[i] === 1;
+  }
+  function groundAt(x, y, half) { return solid(x - half, y) || solid(x, y) || solid(x + half, y); }
+
+  // Moves a body down by its velocity in 1px steps so thin strokes can't be skipped; returns true on landing.
+  function fall(b, dt, feet, half) {
+    var dy = b.vy * dt;
+    if (dy <= 0) { b.y += dy; return false; }
+    var steps = Math.ceil(dy), sy = dy / steps;
+    for (var k = 0; k < steps; k++) {
+      if (groundAt(b.x, b.y + feet + sy, half)) { b.y = Math.min(b.y + sy, FLOOR - feet); return true; }
+      b.y += sy;
+    }
+    return false;
+  }
+
+  var stamp = document.createElement("canvas"), sctx = stamp.getContext("2d");
+  function bake(q) {
+    var px = Math.ceil(q.size * 1.6 * SC);
+    stamp.width = stamp.height = px;
+    sctx.clearRect(0, 0, px, px);
+    sctx.setTransform(SC, 0, 0, SC, px / 2, px / 2);
+    sctx.rotate(q.rot);
+    sctx.font = "700 " + q.size + "px " + bodyFont;
+    sctx.textAlign = "center"; sctx.textBaseline = "middle"; sctx.fillStyle = "#000";
+    sctx.fillText(q.ch, 0, 0);
+    var d = sctx.getImageData(0, 0, px, px).data;
+    var ox = Math.round(q.x * SC - px / 2), oy = Math.round(q.y * SC - px / 2);
+    for (var y = 0; y < px; y++) for (var x = 0; x < px; x++) {
+      if (d[(y * px + x) * 4 + 3] <= 90) continue;
+      var bx = ox + x, by = oy + y;
+      if (bx < 0 || by < 0 || bx >= BW || by >= BH) continue;
+      var i = by * BW + bx; paper[i] = 1; ink[i] = 1;
+    }
+    pageDirty = true;
+  }
+
+  function spawnLetter(cx, cy, vx, vy) {
+    glyphs.push({ ch: LETTERS[(Math.random() * LETTERS.length) | 0], x: cx, y: cy, vx: vx, vy: vy, rot: 0,
+      vr: (Math.random() - .5) * 16, size: 10 + Math.random() * 5, state: "fly", rest: 0 });
+    if (glyphs.length > 48) {                       // keep the page readable: oldest resting letter bakes in
+      for (var i = 0; i < glyphs.length; i++) if (glyphs[i].state === "rest") { bake(glyphs[i]); glyphs.splice(i, 1); break; }
+    }
+  }
+
+  function updateLetter(q, dt) {
+    if (q.state === "gather") return true;          // moved by its group
+    var feet = q.size * 0.36, half = q.size * 0.25;
+    if (q.state === "fly") {
+      q.vy += 380 * dt; q.x += q.vx * dt; q.rot += q.vr * dt;
+      if (q.x < 16) { q.x = 16; q.vx = Math.abs(q.vx) * 0.5; }
+      if (q.x > W - 6) { q.x = W - 6; q.vx = -Math.abs(q.vx) * 0.5; }
+      if (fall(q, dt, feet, half)) {
+        if (q.vy > 160) { q.vy *= -0.3; q.vx *= 0.6; q.vr *= 0.5; }   // small bounce on hard landings
+        else { q.vy = 0; q.state = "rest"; q.rest = 0; }
+      }
+      return q.y < H + 30;
+    }
+    // resting: settle upright-ish, slide to a stop, fall again if the ground was blasted away
+    q.vx *= Math.max(0, 1 - 8 * dt); q.x += q.vx * dt;
+    var r = Math.atan2(Math.sin(q.rot), Math.cos(q.rot));
+    q.rot = r * Math.max(0, 1 - 6 * dt);
+    if (!groundAt(q.x, q.y + feet + 1, half)) { q.state = "fly"; q.vr = (Math.random() - .5) * 4; return true; }
+    q.rest += dt;
+    return true;
+  }
+
+  function tryGather() {
+    for (var i = 0; i < glyphs.length; i++) {
+      var g = glyphs[i];
+      if (g.state !== "rest" || g.rest < GATHER_DELAY) continue;
+      var near = [];
+      for (var j = 0; j < glyphs.length; j++) {
+        var o = glyphs[j];
+        if (o.state === "rest" && Math.abs(o.x - g.x) < GATHER_RADIUS && Math.abs(o.y - g.y) < GATHER_RADIUS * 0.7) near.push(o);
+      }
+      if (near.length >= MIN_GROUP && monsters.length + groups.length < MAX_MONSTERS) {
+        near.sort(function (a, b) { return Math.abs(a.x - g.x) - Math.abs(b.x - g.x); });
+        near = near.slice(0, MAX_GROUP);
+        var cx = 0, fy = -1;
+        near.forEach(function (o) { cx += o.x; fy = Math.max(fy, o.y + o.size * 0.36); });
+        cx /= near.length;
+        near.forEach(function (o, k) {
+          o.state = "gather"; o.sx = o.x; o.sy = o.y; o.srot = o.rot; o.ssize = o.size;
+          o.tx = cx + SLOTS[k][0]; o.ty = fy + SLOTS[k][1];
+        });
+        groups.push({ letters: near, x: cx, y: fy, t: 0 });
+        return;
+      }
+      if (g.rest > BAKE_AFTER) { bake(g); glyphs.splice(i, 1); return; }
+    }
+  }
+
+  function updateGroup(gr, dt) {
+    gr.t += dt / 0.7;
+    var e = gr.t >= 1 ? 1 : 1 - Math.pow(1 - gr.t, 3);
+    gr.letters.forEach(function (o) {
+      o.x = o.sx + (o.tx - o.sx) * e;
+      o.y = o.sy + (o.ty - o.sy) * e - Math.sin(e * Math.PI) * 14;
+      o.rot = o.srot * (1 - e) + e * Math.PI * 2;
+      o.size = o.ssize + (MS - o.ssize) * e;
+    });
+    if (gr.t < 1) return true;
+    glyphs = glyphs.filter(function (o) { return gr.letters.indexOf(o) < 0; });
+    monsters.push({ x: gr.x, y: gr.y, vy: 0, dir: Math.random() < .5 ? -1 : 1, phase: 0, squash: 1,
+      chars: gr.letters.map(function (o) { return o.ch; }), turnCooldown: 0, scared: 0 });
+    rings.push({ x: gr.x, y: gr.y - 16, r: 6, max: 30, life: 0.8 });
+    monstersFormed++;
+    if (monstersFormed === 1) { note = "The letters you blasted loose formed a monster."; noteUntil = performance.now() + 5000; }
+    updateCounter();
+    return false;
+  }
+
+  function updateMonster(m, dt) {
+    var feet = 0, half = 7;
+    m.squash = Math.max(0, m.squash - dt * 4);
+    m.turnCooldown -= dt;
+    var grounded = groundAt(m.x, m.y + 1, half);
+    if (!grounded) {
+      m.vy += 380 * dt;
+      if (fall(m, dt, feet, half)) { m.vy = 0; m.squash = 1; }
+      return m.y < H + 40;
+    }
+    m.vy = 0;
+    // run from the bomb when it hovers close, otherwise wander
+    var speed = 20;
+    m.scared = 0;
+    if (hover.on && finePointer && Math.abs(hover.x - m.x) < 75 && Math.abs(hover.y - (m.y - 16)) < 50) {
+      m.dir = hover.x < m.x ? 1 : -1; speed = 42; m.scared = 1;
+    } else if (m.turnCooldown <= 0 && Math.random() < dt * 0.35) { m.dir *= -1; m.turnCooldown = 1.5; }
+    m.x += m.dir * speed * dt;
+    if (m.x < 20) { m.x = 20; m.dir = 1; }
+    if (m.x > W - 10) { m.x = W - 10; m.dir = -1; }
+    m.phase += dt * speed * 0.6;
+    return true;
+  }
+
+  function scatterMonster(m, cx, cy) {
+    m.chars.forEach(function (ch, k) {
+      var sx = m.x + SLOTS[k][0], sy = m.y + SLOTS[k][1];
+      var a = Math.atan2(sy - cy, sx - cx) + (Math.random() - .5) * 0.6, sp = 120 + Math.random() * 120;
+      glyphs.push({ ch: ch, x: sx, y: sy, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 140, rot: 0,
+        vr: (Math.random() - .5) * 18, size: MS, state: "fly", rest: 0 });
+    });
+  }
+
+  function drawLetter(q, alpha) {
+    ctx.save(); ctx.translate(q.x, q.y); ctx.rotate(q.rot);
+    ctx.font = "700 " + q.size + "px " + bodyFont;
+    ctx.fillStyle = css(colors.ink, alpha);
+    ctx.fillText(q.ch, 0, 0);
+    ctx.restore();
+  }
+
+  function drawMonster(m) {
+    var walk = Math.sin(m.phase), bob = Math.abs(walk) * 1.5;
+    var sq = m.squash * 0.25;
+    // contact shadow so the monster reads apart from the text behind it
+    ctx.fillStyle = css(colors.muted, 0.35);
+    ctx.beginPath(); ctx.ellipse(m.x, m.y + 0.5, 11, 2, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.save();
+    ctx.translate(m.x, m.y);
+    ctx.scale(m.dir * (1 + sq), 1 - sq);
+    ctx.font = "800 " + MS + "px " + bodyFont;
+    ctx.fillStyle = css(colors.ink, 1);
+    for (var k = 0; k < m.chars.length; k++) {
+      var sx = SLOTS[k][0], sy = SLOTS[k][1];
+      if (k < 2) sy += (k === 0 ? walk : -walk) * 2 - 1;     // legs step
+      else sy -= bob;
+      ctx.save(); ctx.translate(sx, sy); ctx.scale(m.dir, 1);
+      ctx.fillText(m.chars[k], 0, 0);
+      ctx.restore();
+    }
+    // eyes: paper-coloured squares with pupils looking where it walks
+    var ey = -20 - bob, es = m.scared ? 5.4 : 4.4;
+    [-4, 4].forEach(function (ex) {
+      ctx.fillStyle = css(colors.ink, 1); ctx.fillRect(ex - es / 2 - 0.8, ey - es / 2 - 0.8, es + 1.6, es + 1.6);
+      ctx.fillStyle = css(colors.paper, 1); ctx.fillRect(ex - es / 2, ey - es / 2, es, es);
+      ctx.fillStyle = css(colors.ink, 1); ctx.fillRect(ex + 0.6 - 1, ey - 1, 2, 2);
+    });
+    ctx.restore();
+  }
+
   var LETTERS = "PAPERBLASTabcdefghkmnrstuy#{};";
   function blast(cx, cy) {
     var r = 15 + Math.random() * 7;
+    // monsters caught in the blast fall apart into letters again
+    monsters = monsters.filter(function (m) {
+      if (Math.hypot(m.x - cx, m.y - 16 - cy) < r + 18) { scatterMonster(m, cx, cy); return false; }
+      return true;
+    });
+    // resting letters nearby get thrown up
+    glyphs.forEach(function (q) {
+      if (q.state !== "gather" && Math.hypot(q.x - cx, q.y - cy) < r * 2.2) {
+        var a = Math.atan2(q.y - cy, q.x - cx); q.state = "fly";
+        q.vx += Math.cos(a) * 120; q.vy = Math.min(q.vy, -120 - Math.random() * 80); q.vr = (Math.random() - .5) * 16;
+      }
+    });
     var bx0 = cx * SC, by0 = cy * SC, br = r * SC, pad = 5 * SC;
     var r2 = br * br, debris = 0, scorchR = (br + 4 * SC) * (br + 4 * SC);
     var keep = 1 / (SC * SC);                // one debris particle per logical pixel of ink
@@ -298,7 +505,7 @@
       }
       for (n = 0; n < 3 + (Math.random() * 3 | 0); n++) {
         var a3 = -Math.PI / 2 + (Math.random() - .5) * 2.2, s3 = 110 + Math.random() * 120;
-        glyphs.push({ ch: LETTERS[(Math.random() * LETTERS.length) | 0], x: cx, y: cy, vx: Math.cos(a3) * s3, vy: Math.sin(a3) * s3, rot: 0, vr: (Math.random() - .5) * 16, size: 9 + Math.random() * 7, life: 1 });
+        spawnLetter(cx, cy, Math.cos(a3) * s3, Math.sin(a3) * s3);
       }
       shake = 1;
     }
@@ -307,7 +514,12 @@
 
   function updateCounter() {
     if (!counter) return;
-    if (blasts > 0) counter.textContent = blasts + (blasts === 1 ? " blast" : " blasts") + " so far.";
+    if (note && performance.now() < noteUntil) { counter.textContent = note; return; }
+    if (blasts > 0) {
+      var t = blasts + (blasts === 1 ? " blast" : " blasts") + " so far.";
+      if (monsters.length) t += " " + monsters.length + (monsters.length === 1 ? " letter monster" : " letter monsters") + " on the loose.";
+      counter.textContent = t;
+    }
     else counter.textContent = hover.on && finePointer ? "Bomb armed. Click to drop it." : "Click or tap the page to blast it.";
   }
 
@@ -322,10 +534,13 @@
       q.life -= dt * (q.kind === "spark" ? 2.4 : q.kind === "scrap" ? 0.6 : 0.9);
       return !(q.life <= 0 || q.y > H + 8 || q.x < -8 || q.x > W + 8);
     });
-    step(glyphs, dt, function (q) {
-      q.vy += 380 * dt; q.x += q.vx * dt; q.y += q.vy * dt; q.rot += q.vr * dt; q.life -= dt * 0.55;
-      return !(q.life <= 0 || q.y > H + 20);
-    });
+    step(glyphs, dt, updateLetter);
+    step(groups, dt, updateGroup);
+    var before = monsters.length;
+    step(monsters, dt, updateMonster);
+    if (monsters.length !== before) updateCounter();
+    tryGather();
+    if (note && now >= noteUntil) { note = ""; updateCounter(); }
     step(smoke, dt, function (q) { q.x += q.vx * dt; q.y += q.vy * dt; q.r += 14 * dt; q.life -= dt * 0.8; return q.life > 0; });
     step(rings, dt, function (q) { q.r += (q.max - q.r) * Math.min(1, dt * 9); q.life -= dt * 2.6; return q.life > 0; });
     step(flashes, dt, function (q) { q.life -= dt * 4.5; return q.life > 0; });
@@ -338,8 +553,9 @@
       } else { figure.style.setProperty("--sx", "0px"); figure.style.setProperty("--sy", "0px"); }
     }
     draw(now);
-    var busy = particles.length || glyphs.length || smoke.length || rings.length || flashes.length || shake > 0 || (hover.on && finePointer);
-    if (busy) requestAnimationFrame(tick); else running = false;
+    var busy = particles.length || glyphs.length || groups.length || monsters.length || smoke.length ||
+      rings.length || flashes.length || shake > 0 || (hover.on && finePointer);
+    if (busy && visible) requestAnimationFrame(tick); else running = false;
   }
 
   function toPage(e) {
@@ -369,10 +585,14 @@
   });
   var reset = document.getElementById("blast-reset");
   if (reset) reset.addEventListener("click", function () {
-    particles = []; smoke = []; rings = []; flashes = []; glyphs = [];
+    particles = []; smoke = []; rings = []; flashes = []; glyphs = []; monsters = []; groups = [];
+    note = ""; monstersFormed = 0;
     layoutPage(); draw(performance.now()); start();
   });
 
+  if ("IntersectionObserver" in window) {
+    new IntersectionObserver(function (es) { visible = es[0].isIntersecting; if (visible) start(); }).observe(canvas);
+  }
   readColors(); layoutPage(); draw(performance.now());
   if (document.fonts && document.fonts.ready) {
     document.fonts.ready.then(function () { if (blasts === 0) { layoutPage(); draw(performance.now()); } });
