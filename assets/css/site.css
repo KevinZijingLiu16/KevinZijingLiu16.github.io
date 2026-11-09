@@ -263,3 +263,15 @@ figcaption { font-size: .85rem; color: var(--muted); }
   *, *::before, *::after { transition: none !important; animation: none !important; }
   .blast { transform: none; }
 }
+
+/* identity row, profile icons */
+.id-row { display: flex; align-items: center; gap: var(--s-4) var(--s-5); flex-wrap: wrap; }
+.avatar { width: clamp(72px, 9vw, 104px); height: auto; aspect-ratio: 1; border-radius: 50%; object-fit: cover; border: 1px solid var(--rule); background: var(--surface); }
+.social { display: flex; gap: var(--s-2); align-items: center; }
+.icon-btn { width: 2.6rem; height: 2.6rem; display: grid; place-items: center; border: 1.5px solid var(--ink); border-radius: 50%; color: var(--ink); text-decoration: none; }
+.icon-btn:hover { background: var(--ink); color: var(--bg); }
+.icon-btn svg { width: 1.15rem; height: 1.15rem; }
+.contact dt { display: flex; align-items: center; gap: .5em; }
+.contact dt svg { width: 1.05em; height: 1.05em; flex: none; color: var(--ink); }
+.site-footer nav a { display: inline-flex; align-items: center; gap: .4em; }
+.site-footer nav a svg { width: 1em; height: 1em; }
