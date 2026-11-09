@@ -121,7 +121,7 @@
       "Lead programmer on Remains, out now on Steam.",
       "Solo developer of Paper Blast, where PDF pages",
       "become destructible terrain, like this one.",
-      "Game Studies MA student in Jyväskylä, Finland.",
+      "Game Studies Master's student in Jyväskylä, Finland.",
       "Clean architecture, SOLID, and tested code."
     ];
     lines.forEach(function (t, i) { o.fillText(t, 22, 104 + i * 18); });
