@@ -58,11 +58,18 @@
   if (!canvas || !canvas.getContext) return;
   var figure = canvas.closest(".blast");
 
-  var W = 360, H = 250;
-  canvas.width = W; canvas.height = H;
+  var W = 360, H = 250;                 // logical page size; all game-space coordinates use these
+  var cssW = canvas.getBoundingClientRect().width || W;
+  var SC = Math.max(2, Math.min(4, Math.ceil(cssW * (window.devicePixelRatio || 1) / W)));
+  var BW = W * SC, BH = H * SC;         // backing pixels, so text renders sharp at any screen density
+  canvas.width = BW; canvas.height = BH;
   var ctx = canvas.getContext("2d");
-  var ink = new Uint8Array(W * H);      // 0 paper, 1 ink, 2 margin rule, 3 scorch
-  var paper = new Uint8Array(W * H);    // 1 = page still there
+  var ink = new Uint8Array(BW * BH);    // 0 paper, 1 ink, 2 margin rule, 3 scorch
+  var paper = new Uint8Array(BW * BH);  // 1 = page still there
+  var pageCanvas = document.createElement("canvas");
+  pageCanvas.width = BW; pageCanvas.height = BH;
+  var pctx = pageCanvas.getContext("2d");
+  var pageDirty = true;
   var particles = [];                   // ink debris, sparks, paper scraps
   var smoke = [], rings = [], flashes = [], glyphs = [];
   var shake = 0;
@@ -98,8 +105,9 @@
   var bodyFont = "";
   function layoutPage() {
     var off = document.createElement("canvas");
-    off.width = W; off.height = H;
+    off.width = BW; off.height = BH;
     var o = off.getContext("2d");
+    o.scale(SC, SC);
     o.fillStyle = "#000"; o.textBaseline = "alphabetic";
     var display = getComputedStyle(document.documentElement).getPropertyValue("--f-display");
     bodyFont = getComputedStyle(document.documentElement).getPropertyValue("--f-body");
@@ -119,19 +127,28 @@
     lines.forEach(function (t, i) { o.fillText(t, 22, 104 + i * 18); });
     o.font = "italic 400 10px " + bodyFont;
     o.fillText("p. 1", W - 44, H - 14);
-    var d = o.getImageData(0, 0, W, H).data;
-    for (var i = 0; i < W * H; i++) {
-      ink[i] = d[i * 4 + 3] > 120 ? 1 : 0;   // threshold to crisp pixels, like the game's ink mask
+    var d = o.getImageData(0, 0, BW, BH).data;
+    for (var i = 0; i < BW * BH; i++) {
+      ink[i] = d[i * 4 + 3] > 90 ? 1 : 0;    // threshold to an ink mask, like the game does
       paper[i] = 1;
     }
-    for (var y = 0; y < H; y++) { ink[y * W + 12] = 2; }
+    var mx = 12 * SC;
+    for (var y = 0; y < BH; y++) for (var x = mx; x < mx + Math.max(1, SC >> 1); x++) ink[y * BW + x] = 2;
+    pageDirty = true;
     blasts = 0; updateCounter();
   }
 
-  var img = ctx.createImageData(W, H);
+  var img = pctx.createImageData(BW, BH);
   function drawPage() {
+    if (pageDirty) { renderPage(); pageDirty = false; }
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, BW, BH);
+    ctx.drawImage(pageCanvas, 0, 0);
+    ctx.setTransform(SC, 0, 0, SC, 0, 0);
+  }
+  function renderPage() {
     var p = img.data, c, a;
-    for (var i = 0; i < W * H; i++) {
+    for (var i = 0; i < BW * BH; i++) {
       var k = i * 4;
       if (!paper[i]) { p[k + 3] = 0; continue; }
       var t = ink[i];
@@ -139,7 +156,7 @@
       a = t === 2 ? 110 : 255;
       p[k] = c[0]; p[k + 1] = c[1]; p[k + 2] = c[2]; p[k + 3] = a;
     }
-    ctx.putImageData(img, 0, 0);
+    pctx.putImageData(img, 0, 0);
   }
 
   // A 15 x 15 pixel bomb with a flickering fuse, drawn at the pointer.
@@ -237,24 +254,32 @@
   var LETTERS = "PAPERBLASTabcdefghkmnrstuy#{};";
   function blast(cx, cy) {
     var r = 15 + Math.random() * 7;
-    var r2 = r * r, debris = 0, scorchR = (r + 4) * (r + 4);
-    for (var y = Math.max(0, (cy - r - 5) | 0); y < Math.min(H, cy + r + 5); y++) {
-      for (var x = Math.max(0, (cx - r - 5) | 0); x < Math.min(W, cx + r + 5); x++) {
-        var dx = x - cx, dy = y - cy, i = y * W + x, d2 = dx * dx + dy * dy;
+    var bx0 = cx * SC, by0 = cy * SC, br = r * SC, pad = 5 * SC;
+    var r2 = br * br, debris = 0, scorchR = (br + 4 * SC) * (br + 4 * SC);
+    var keep = 1 / (SC * SC);                // one debris particle per logical pixel of ink
+    // jagged outline: radius varies with angle, so craters look torn rather than stamped
+    var lobes = [], nl = 18;
+    for (var l = 0; l < nl; l++) lobes.push(0.84 + Math.random() * 0.26);
+    for (var y = Math.max(0, (by0 - br - pad) | 0); y < Math.min(BH, by0 + br + pad); y++) {
+      for (var x = Math.max(0, (bx0 - br - pad) | 0); x < Math.min(BW, bx0 + br + pad); x++) {
+        var dx = x - bx0, dy = y - by0, i = y * BW + x, d2 = dx * dx + dy * dy;
         if (!paper[i]) continue;
-        if (d2 > r2 * (0.82 + Math.random() * 0.3)) {
+        var t = (Math.atan2(dy, dx) / (Math.PI * 2) + 1) * nl, l0 = t | 0, f = t - l0;
+        var edge = lobes[l0 % nl] * (1 - f) + lobes[(l0 + 1) % nl] * f;
+        if (d2 > r2 * edge * edge) {
           // charred rim just outside the crater
-          if (d2 < scorchR * (0.85 + Math.random() * 0.3) && ink[i] === 0 && Math.random() < 0.75) ink[i] = 3;
+          if (d2 < scorchR * edge * edge && ink[i] === 0 && Math.random() < 0.8) ink[i] = 3;
           continue;
         }
-        if (ink[i] === 1 && !reduceMotion && debris < 240) {
+        if (ink[i] === 1 && !reduceMotion && debris < 240 && Math.random() < keep) {
           var a = Math.atan2(dy, dx), sp = 50 + Math.random() * 140;
-          particles.push({ kind: "ink", x: x, y: y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 100, life: 1, s: 1 + (Math.random() < .3 ? 1 : 0) });
+          particles.push({ kind: "ink", x: x / SC, y: y / SC, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 100, life: 1, s: 1 + (Math.random() < .3 ? 1 : 0) });
           debris++;
         }
         paper[i] = 0;
       }
     }
+    pageDirty = true;
     blasts++; updateCounter();
     if (!reduceMotion) {
       var n;
@@ -345,7 +370,7 @@
   var reset = document.getElementById("blast-reset");
   if (reset) reset.addEventListener("click", function () {
     particles = []; smoke = []; rings = []; flashes = []; glyphs = [];
-    layoutPage(); draw(performance.now());
+    layoutPage(); draw(performance.now()); start();
   });
 
   readColors(); layoutPage(); draw(performance.now());
@@ -353,7 +378,7 @@
     document.fonts.ready.then(function () { if (blasts === 0) { layoutPage(); draw(performance.now()); } });
   }
   var mq = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)");
-  function recolor() { readColors(); draw(performance.now()); }
+  function recolor() { readColors(); pageDirty = true; draw(performance.now()); }
   if (mq && mq.addEventListener) mq.addEventListener("change", recolor);
   new MutationObserver(recolor).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
 })();

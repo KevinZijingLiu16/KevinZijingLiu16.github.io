@@ -120,7 +120,7 @@ body::before {
 .role strong { color: var(--ink); font-weight: 700; }
 
 .blast {
-  position: relative; min-width: 0;
+  position: relative; min-width: 0; gap: 0;
   background: transparent; border: 1px solid var(--rule);
   border-radius: 2px; box-shadow: 0 1px 0 var(--rule), 8px 8px 0 color-mix(in srgb, var(--ink) 8%, transparent);
   --tilt: -1.2deg; --sx: 0px; --sy: 0px;
@@ -129,7 +129,7 @@ body::before {
 }
 .blast.armed { --tilt: 0deg; box-shadow: 0 1px 0 var(--rule), 12px 12px 0 color-mix(in srgb, var(--ink) 12%, transparent); }
 @property --tilt { syntax: "<angle>"; inherits: false; initial-value: -1.2deg; }
-.blast canvas { display: block; width: 100%; height: auto; image-rendering: pixelated; cursor: crosshair; touch-action: manipulation; }
+.blast canvas { display: block; width: 100%; height: auto; cursor: crosshair; touch-action: manipulation; }
 @media (hover: hover) and (pointer: fine) { .blast canvas { cursor: none; } }
 .blast figcaption { background: var(--surface); display: flex; justify-content: space-between; gap: var(--s-3); flex-wrap: wrap; font-size: .8rem; color: var(--muted); padding: var(--s-2) var(--s-3); border-top: 1px dashed var(--rule); }
 .blast button { font: inherit; color: var(--accent); background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; text-underline-offset: .2em; }
