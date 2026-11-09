@@ -280,3 +280,11 @@ figcaption { font-size: .85rem; color: var(--muted); }
 .contact dt svg { width: 1.05em; height: 1.05em; flex: none; color: var(--ink); }
 .site-footer nav a { display: inline-flex; align-items: center; gap: .4em; }
 .site-footer nav a svg { width: 1em; height: 1em; }
+
+.contact-details { display: flex; flex-wrap: wrap; gap: var(--s-6); align-items: start; min-width: 0; }
+.contact-details dl { flex: 1 1 18rem; min-width: 0; }
+.qr { flex: none; display: grid; gap: var(--s-2); justify-items: center; }
+.qr img { width: 8.5rem; height: auto; border-radius: var(--radius); border: 1px solid var(--rule); background: #ffffff; padding: 4px; }
+.qr figcaption { font-size: .8rem; color: var(--muted); }
+/* on a phone the viewer can't scan their own screen; the LinkedIn link above does the job */
+@media (max-width: 640px) { .qr { display: none; } }
