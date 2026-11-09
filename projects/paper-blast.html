@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Paper Blast Case Study</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Paper Blast: a Unity 2D platformer where imported PDF pages become destructible pixel terrain. Case study by Kevin Liu.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,400..800&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="../assets/css/site.css">
+</head>
+<body>
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="../index.html">Kevin Liu<span>.</span></a>
+    <nav class="nav" aria-label="Main">
+      <a href="../index.html#work">Work</a>
+      <a href="../about.html">About</a>
+      <a href="../assets/docs/zijing-liu-cv.pdf" target="_blank" rel="noopener">CV</a>
+      <a href="https://github.com/KevinZijingLiu16" target="_blank" rel="noopener">GitHub</a>
+      <a href="../index.html#contact">Contact</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="case-hero">
+    <div class="wrap">
+      <p class="crumb"><a href="../index.html#work">Selected work</a> / Paper Blast</p>
+      <h1>Paper Blast</h1>
+      <p class="lede">I wanted to blow up my reading list, so I built a game where you can. Paper Blast is a 2D platformer in Unity where any PDF you import becomes destructible terrain.</p>
+      <dl class="facts">
+        <div><dt>Role</dt><dd>Solo developer</dd></div>
+        <div><dt>Engine</dt><dd>Unity, C#</dd></div>
+        <div><dt>Status</dt><dd>Playable prototype, in progress</dd></div>
+        <div><dt>Codebase</dt><dd>9 modules, 300+ unit tests</dd></div>
+      </dl>
+      <div class="btns">
+        <a class="btn primary" href="https://github.com/KevinZijingLiu16/KevinPaperBlast" target="_blank" rel="noopener">View code on GitHub</a>
+        <a class="btn" href="https://kevinzijingliu16.itch.io/paperblast" target="_blank" rel="noopener">Download on itch.io</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="case-body">
+    <div class="wrap">
+      <div class="two">
+        <div>
+          <div class="video" data-yt="ONgBo4TUfT0">
+            <img src="https://i.ytimg.com/vi/ONgBo4TUfT0/maxresdefault.jpg" onerror="this.onerror=null;this.src='../assets/img/paperblast.webp'" alt="" width="1280" height="720">
+            <button type="button" aria-label="Play Paper Blast gameplay video"><span><svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></span></button>
+          </div>
+          <p class="video-note">Gameplay video. <a href="https://youtu.be/ONgBo4TUfT0" target="_blank" rel="noopener">Open on YouTube</a></p>
+        </div>
+        <div class="prose">
+          <p>Studying Game Studies means a lot of PDFs. Somewhere between another paper and another learning diary, "what if I could blow this up?" became a prototype.</p>
+          <p>You jump across lines of text, blast through paragraphs and fall into the next page. Rockets, lasers, a black hole and an eraser help with the demolition. Some of the letters you blast loose gather into enemies and fight back.</p>
+          <p>The biggest technical challenge was working with layouts that were never designed to be levels. The document gives me the layout. My job is to turn it into something playable.</p>
+        </div>
+      </div>
+
+      <div class="block">
+        <h2>Technical challenges</h2>
+
+        <div class="challenge">
+          <h3>Turning a document into a level</h3>
+          <div class="two">
+            <div class="prose">
+              <p>Each page is rendered to pixels and analysed. Every text line gets a one-way platform along its top, so you can jump up through it and land on it. Images, tables and formulas become solid blocks.</p>
+              <p>Scanned pages have no text layer, so an image-based fallback finds line-shaped ink instead: it bridges small gaps along each row and joins touching runs into blocks.</p>
+              <p>While you play a page, the next one is prepared on a background thread so page turns don't stall. If no PDF is loaded, a seeded generator writes one, so the game always has something to play.</p>
+            </div>
+            <dl class="patterns">
+              <div><dt>CollisionMaskBuilder</dt><dd>One-way platforms on text lines, solid blocks for figures.</dd></div>
+              <div><dt>InkLineDetector</dt><dd>Line detection for scanned pages without a text layer.</dd></div>
+              <div><dt>FigureDetector</dt><dd>Finds images, tables and formulas to treat as solid.</dd></div>
+              <div><dt>Prefetcher</dt><dd>Builds the next page on a worker thread.</dd></div>
+              <div><dt>DocumentGenerator</dt><dd>Seeded fallback PDF with headings, lists and columns.</dd></div>
+            </dl>
+          </div>
+        </div>
+
+        <div class="challenge">
+          <h3>Keeping what you see and what you collide with in sync</h3>
+          <div class="prose">
+            <p>The page has two layers: the visible pixels and a collision mask of the same size. A blast clears both in the same loop, so they can never disagree. Re-uploading a whole page texture after every explosion would be far too slow, so the terrain marks only the chunks that changed. The view then copies those chunks to the GPU with a fixed budget per frame. The chunk tracker is preallocated, so blasting never allocates memory.</p>
+          </div>
+          <div class="two">
+            <div class="code">
+              <div class="code-head"><span>Terrain/PixelTerrain.cs</span><a href="https://github.com/KevinZijingLiu16/KevinPaperBlast/blob/main/Assets/_Project/Scripts/Terrain/PixelTerrain.cs" target="_blank" rel="noopener">Full file</a></div>
+<pre><code class="language-csharp">public void Carve(CarveShape shape)
+{
+    var bounds = shape.PixelBounds;
+    var xMin = Mathf.Max(0, bounds.xMin);
+    var yMin = Mathf.Max(0, bounds.yMin);
+    var xMax = Mathf.Min(Width, bounds.xMax);
+    var yMax = Mathf.Min(Height, bounds.yMax);
+    if (xMin >= xMax || yMin >= yMax)
+        return;
+
+    var changed = false;
+    for (var y = yMin; y &lt; yMax; y++)
+    {
+        var row = y * Width;
+        for (var x = xMin; x &lt; xMax; x++)
+        {
+            if (!shape.Contains(x, y))
+                continue;
+
+            var i = row + x;
+            if (_visual[i].a == 0 &amp;&amp; _collision[i] == CollisionCell.Empty)
+                continue;
+
+            // Visual and collision layers change together.
+            _visual[i] = Hole;
+            _collision.ClearAt(i);
+            changed = true;
+        }
+    }
+
+    if (changed)
+        Chunks.MarkDirty(new RectInt(xMin, yMin, xMax - xMin, yMax - yMin));
+}</code></pre>
+            </div>
+            <div class="code">
+              <div class="code-head"><span>Terrain/TerrainView.cs (simplified)</span><a href="https://github.com/KevinZijingLiu16/KevinPaperBlast/blob/main/Assets/_Project/Scripts/Terrain/TerrainView.cs" target="_blank" rel="noopener">Full file</a></div>
+<pre><code class="language-csharp">private void LateUpdate()
+{
+    if (_terrain == null || _terrain.Chunks.DirtyCount == 0)
+        return;
+
+    // Upload at most one staging texture's worth
+    // of chunks per frame; the rest wait their turn.
+    var uploaded = 0;
+    while (uploaded &lt; _staging.Length &amp;&amp;
+           _terrain.Chunks.TryDequeue(out var rect))
+    {
+        UploadChunk(_staging[uploaded], _pageTexture, rect);
+        uploaded++;
+    }
+}
+
+private void UploadChunk(Texture2D staging, Texture2D target, RectInt rect)
+{
+    WriteRegion(staging.GetPixelData&lt;Color32&gt;(0), _chunkSize,
+                rect, rect.xMin, rect.yMin);
+    staging.Apply(false);
+
+    // GPU-side copy of just this chunk into the page texture.
+    Graphics.CopyTexture(staging, 0, 0, 0, 0, rect.width, rect.height,
+                         target, 0, 0, rect.xMin, rect.yMin);
+}</code></pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="challenge">
+          <h3>A player controller that reads the page</h3>
+          <div class="two">
+            <div class="prose">
+              <p>The character doesn't use Unity physics. It moves one pixel at a time and checks the terrain directly: solid cells block from every side, one-way cells only stop you when you fall onto them from above.</p>
+              <p>Documents have very different line spacing, and a jump that works on a double-spaced essay is useless on a dense paper. So the game measures the page's typical line pitch and sets the jump to 1.4 lines. Every document stays playable without hand tuning.</p>
+            </div>
+            <div class="code">
+              <div class="code-head"><span>Physics/LinePitchEstimator.cs</span><a href="https://github.com/KevinZijingLiu16/KevinPaperBlast/blob/main/Assets/_Project/Scripts/Physics/LinePitchEstimator.cs" target="_blank" rel="noopener">Full file</a></div>
+<pre><code class="language-csharp">// Median distance from each line's top to the line
+// directly below it. Lines must overlap horizontally,
+// so neighbouring columns don't count.
+public static float Estimate(IReadOnlyList&lt;TextLine&gt; lines)
+{
+    var pitches = new List&lt;int&gt;();
+    for (var i = 0; i &lt; lines.Count; i++)
+    {
+        var upper = lines[i].Bounds;
+        var best = int.MaxValue;
+        for (var j = 0; j &lt; lines.Count; j++)
+        {
+            var lower = lines[j].Bounds;
+            var pitch = upper.yMax - lower.yMax;
+            if (pitch &lt;= 0 || pitch &gt;= best) continue;
+            if (Mathf.Min(upper.xMax, lower.xMax) &lt;=
+                Mathf.Max(upper.xMin, lower.xMin)) continue;
+            best = pitch;
+        }
+        if (best != int.MaxValue) pitches.Add(best);
+    }
+    if (pitches.Count == 0) return 0f;
+    pitches.Sort();
+    return pitches[pitches.Count / 2];
+}
+
+// PlatformerSettings
+public float JumpHeightFor(float linePitch) =>
+    linePitch &gt; 0f ? linePitch * jumpHeightInLines
+                   : fallbackJumpHeight;</code></pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="challenge">
+          <h3>Architecture you can test</h3>
+          <div class="prose">
+            <p>The project is split into nine assembly definitions: Core, Pdf, Terrain, Physics, Gameplay, UI, Platform, Audio and Bootstrap. An architecture test reads the assembly files and fails if a module references one it shouldn't, so the dependency rules can't quietly erode.</p>
+            <p>The simulation code (terrain, rockets, black hole, flying letters, letter monsters) is plain C# with no MonoBehaviour, so it runs in more than 300 edit-mode tests without entering Play mode. Systems that run every frame use fixed slot counts and don't allocate.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="block">
+        <h2>Design questions I'm testing</h2>
+        <div class="prose">
+          <p>Building this brought me back to a question from Game Studies: what does a mechanic change beyond the immediate action?</p>
+          <p>Here, firing a weapon changes more than a target. It can open a route, destroy a platform you might need, and leave behind letters that become another threat. Letters that come to rest bake back into the page as new platforms, or gather into a monster. I want to see how those consequences interact.</p>
+          <p>There is also a player-learning question. When do players realise the flying letters are more than visual effects? Can they connect their own destruction to the enemies that follow? Thinking about what players can discover through the systems I build has become the most interesting part of the project.</p>
+          <p class="muted">Still a work in progress. Even after turning my reading into a game, I still have to deal with the consequences of skipping some paragraphs.</p>
+        </div>
+      </div>
+
+      <nav class="next" aria-label="More projects">
+        <a href="remains.html">Previous: Remains</a>
+        <a href="mannequin-escape.html">Next: Mannequin Escape</a>
+      </nav>
+    </div>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <span>Kevin (Zijing) Liu, Jyväskylä, Finland</span>
+    <nav aria-label="Footer"><a href="https://github.com/KevinZijingLiu16" target="_blank" rel="noopener">GitHub</a><a href="https://www.linkedin.com/in/kevin-liu-5631882b5/" target="_blank" rel="noopener">LinkedIn</a><a href="mailto:liuzijingliu1601@gmail.com">Email</a></nav>
+  </div>
+</footer>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="../assets/js/site.js"></script>
+</body>
+</html>

@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Remains Case Study</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Remains: a 2.5D exploration game released on Steam. Kevin Liu was the only programmer and technical lead.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,400..800&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="../assets/css/site.css">
+</head>
+<body>
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="../index.html">Kevin Liu<span>.</span></a>
+    <nav class="nav" aria-label="Main">
+      <a href="../index.html#work">Work</a>
+      <a href="../about.html">About</a>
+      <a href="../assets/docs/zijing-liu-cv.pdf" target="_blank" rel="noopener">CV</a>
+      <a href="https://github.com/KevinZijingLiu16" target="_blank" rel="noopener">GitHub</a>
+      <a href="../index.html#contact">Contact</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="case-hero">
+    <div class="wrap">
+      <p class="crumb"><a href="../index.html#work">Selected work</a> / Remains</p>
+      <h1>Remains</h1>
+      <p class="lede">Play as a small robot that wakes up in a forest after the end of the world. Explore to find out what happened, and use a foam gun and a vacuum to collect replacement parts for yourself.</p>
+      <dl class="facts">
+        <div><dt>Role</dt><dd>Only programmer, technical lead</dd></div>
+        <div><dt>Team</dt><dd>With a game designer, artist and level designer</dd></div>
+        <div><dt>Duration</dt><dd>3 months, Scrum</dd></div>
+        <div><dt>Released</dt><dd>PC, on Steam</dd></div>
+      </dl>
+      <div class="btns">
+        <a class="btn primary" href="https://github.com/KevinZijingLiu16/Remains" target="_blank" rel="noopener">View code on GitHub</a>
+        <a class="btn" href="https://store.steampowered.com/app/4129530/Remains/" target="_blank" rel="noopener">Steam page</a>
+        <a class="btn" href="../assets/docs/remains-tech-design.pdf" target="_blank" rel="noopener">Technical design (PDF)</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="case-body">
+    <div class="wrap">
+      <div class="two">
+        <div>
+          <div class="video" data-yt="BwUqvsdftDM">
+            <img src="https://i.ytimg.com/vi/BwUqvsdftDM/maxresdefault.jpg" onerror="this.onerror=null;this.src='../assets/img/remains-logo.webp'" alt="" width="1280" height="720">
+            <button type="button" aria-label="Play Remains gameplay video"><span><svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></span></button>
+          </div>
+          <p class="video-note">Gameplay video. <a href="https://youtu.be/BwUqvsdftDM" target="_blank" rel="noopener">Open on YouTube</a></p>
+        </div>
+        <div class="prose">
+          <h2>What I did</h2>
+          <ul>
+            <li>Planned the technical design: system flowcharts and a design document the whole team could read.</li>
+            <li>Designed all of the gameplay mechanics and wrote all of the game's code.</li>
+            <li>Built the opening cinematic with Timeline, the main menu and the tutorial scene.</li>
+            <li>Implemented every UI element in the project.</li>
+            <li>Ran the GitHub repository, reviewed pull requests and kept the main branch stable.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="block">
+        <h2>Seventeen systems, built to be reused</h2>
+        <div class="two">
+          <div class="prose">
+            <p>I was the only team member who knew Unity, so the codebase had to be easy for others to use and easy for me to change. I followed clean C# practice and the SOLID principles, and kept each system small and focused.</p>
+            <p>Key gameplay objects became prefabs. Our level designer, who had never used Unity, built Level 1 by placing and configuring them, a bit like playing a construction game.</p>
+          </div>
+          <dl class="patterns">
+            <div><dt>Movement</dt><dd>Spline-locked 2.5D runner, rotation stabilisation, airflow and slippery zones, water zones.</dd></div>
+            <div><dt>Tools</dt><dd>Sticky foam gun that creates platforms, vacuum, weapon selection UI.</dd></div>
+            <div><dt>AI</dt><dd>State machines for enemies and NPCs.</dd></div>
+            <div><dt>World</dt><dd>Battery pickups, player power, dirt and cleaning, fuse boxes, key-locked levels, reaction panels.</dd></div>
+            <div><dt>Flow</dt><dd>Game progress and save/load, scene management, tutorial prompts and interaction triggers, camera control.</dd></div>
+          </dl>
+        </div>
+      </div>
+
+      <div class="block">
+        <h2>Spline-locked movement</h2>
+        <div class="two">
+          <div class="prose">
+            <p>The robot moves through a 3D world on a fixed path, like a side-scroller that can curve. A Rigidbody gives it real collisions and jumps, while its position along the path is tracked as a single value <code>t</code>.</p>
+            <p>The work is split across three components. <code>SplineTracker</code> converts speed into distance along the spline, <code>SplineObjectMover</code> moves the Rigidbody to that point and reports whether it succeeded, and <code>SplineRunnerRB</code> reads input and decides what to do. Each part has one job.</p>
+          </div>
+          <div class="code">
+            <div class="code-head"><span>Player/SplineRunnerRB.cs</span><a href="https://github.com/KevinZijingLiu16/Remains/blob/main/Assets/Scripts/Player/SplineRunnerRB.cs" target="_blank" rel="noopener">Full file</a></div>
+<pre><code class="language-csharp">void FixedUpdate()
+{
+    if (!_splineTracker.IsValid()) return;
+
+    _grounded = IsGrounded();
+    float control = _grounded ? 1f : Mathf.Clamp01(airControl);
+
+    HandleSplineMovement(control);
+    HandleJump();
+    UpdateOrientationWithStabilization();
+    UpdateVisualEffects();
+    UpdateMovementSound();
+}
+
+private void HandleSplineMovement(float controlFactor)
+{
+    float dt = Time.fixedDeltaTime;
+    float direction = Mathf.Sign(_cachedMove);
+    float speed = Mathf.Abs(_cachedMove) * moveSpeed * controlFactor;
+
+    float newT = _splineTracker.MoveAlongSpline(_t, speed, dt, direction);
+    var moveResult = _splineMover.MoveToSplinePosition(_rb, newT, _t, direction);
+
+    // Only commit the new position if the body could get there.
+    if (moveResult.success)
+        _t = moveResult.finalT;
+
+    if (Mathf.Abs(_cachedMove) &gt; 0.001f)
+        _lastMovePositive = _cachedMove &gt; 0f;
+}</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="block">
+        <h2>Technical design</h2>
+        <div class="two">
+          <figure>
+            <a href="https://www.figma.com/board/FDKqwLwmx6aFHmNpCc7856/Remains-Technical-Design?node-id=0-1" target="_blank" rel="noopener"><img src="../assets/img/remains-flowchart.webp" alt="Remains technical design flowchart grouping systems by priority" loading="lazy" width="934" height="475"></a>
+            <figcaption>System flowchart, grouped by priority. <a href="https://www.figma.com/board/FDKqwLwmx6aFHmNpCc7856/Remains-Technical-Design?node-id=0-1" target="_blank" rel="noopener">Open in Figma</a></figcaption>
+          </figure>
+          <div class="prose">
+            <p>Before writing code I mapped every system and how they talk to each other, then sorted them into main mechanics, high priority and medium priority. That map became our shared reference in sprint planning with the designer and artist.</p>
+            <p>Patterns used across the project:</p>
+            <ul class="chips"><li>Component</li><li>State</li><li>Observer / events</li><li>Strategy</li><li>Factory</li><li>Mediator</li><li>Service / facade</li><li>MVC-style UI</li><li>Repository</li><li>Data transfer objects</li><li>Singleton</li></ul>
+            <p><a href="../assets/docs/remains-tech-design.pdf" target="_blank" rel="noopener">Read the technical design document (PDF)</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="block">
+        <h2>What I learned</h2>
+        <div class="prose">
+          <p>Technical leadership turned out to be less about writing code and more about letting others work without waiting for me. Prefabs, documentation and a stable main branch did more for the team than any single feature.</p>
+          <p>I also learned to agree on scope earlier. A few systems were finished but cut from the final build because the design moved on. On my next project I check designs against milestones before building anything complex.</p>
+          <p>We had no technical artist, so the visuals aren't perfect. That gap is why I now want to learn more about technical art and bridging code and visuals.</p>
+          <p class="muted">Course reflection written for JAMK: <a href="remains-learning-portfolio.html">Remains learning portfolio</a></p>
+        </div>
+      </div>
+
+      <nav class="next" aria-label="More projects">
+        <a href="../index.html#work">All projects</a>
+        <a href="paper-blast.html">Next: Paper Blast</a>
+      </nav>
+    </div>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <span>Kevin (Zijing) Liu, Jyväskylä, Finland</span>
+    <nav aria-label="Footer"><a href="https://github.com/KevinZijingLiu16" target="_blank" rel="noopener">GitHub</a><a href="https://www.linkedin.com/in/kevin-liu-5631882b5/" target="_blank" rel="noopener">LinkedIn</a><a href="mailto:liuzijingliu1601@gmail.com">Email</a></nav>
+  </div>
+</footer>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="../assets/js/site.js"></script>
+</body>
+</html>

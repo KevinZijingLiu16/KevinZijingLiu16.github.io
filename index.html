@@ -1,0 +1,342 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kevin Liu Portfolio</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Kevin (Zijing) Liu, Unity developer and gameplay programmer. Remains on Steam, Paper Blast, Mannequin Escape and more.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,400..800&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="assets/css/site.css">
+</head>
+<body>
+<a class="visually-hidden" href="#work">Skip to projects</a>
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="index.html">Kevin Liu<span>.</span></a>
+    <nav class="nav" aria-label="Main">
+      <a href="index.html" aria-current="page">Work</a>
+      <a href="about.html">About</a>
+      <a href="assets/docs/zijing-liu-cv.pdf" target="_blank" rel="noopener">CV</a>
+      <a href="https://github.com/KevinZijingLiu16" target="_blank" rel="noopener">GitHub</a>
+      <a href="#contact">Contact</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="hero">
+    <div class="wrap">
+      <div class="hero-text">
+        <h1>Kevin Liu</h1>
+        <p class="role"><strong>Unity developer.</strong> Gameplay programming and implementation in C#.</p>
+        <p class="lede">I turn design ideas into game systems that a team can build on. Lead programmer on <a href="projects/remains.html">Remains</a>, now on Steam, and solo developer of <a href="projects/paper-blast.html">Paper Blast</a>. Based in Jyväskylä, Finland.</p>
+        <div class="btns">
+          <a class="btn primary" href="#work">See projects</a>
+          <a class="btn" href="https://github.com/KevinZijingLiu16" target="_blank" rel="noopener"><svg viewBox="0 0 16 16" aria-hidden="true" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>GitHub</a>
+          <a class="btn" href="assets/docs/zijing-liu-cv.pdf" target="_blank" rel="noopener">CV (PDF)</a>
+        </div>
+      </div>
+      <figure class="blast">
+        <canvas id="blast-canvas" width="360" height="250" tabindex="0" role="img" aria-label="A small page of text about Kevin. Click or press Enter to blast holes in it, the way Paper Blast turns PDF pages into destructible terrain."></canvas>
+        <figcaption><span id="blast-count">Click or tap the page to blast it.</span><button type="button" id="blast-reset">Restore page</button></figcaption>
+      </figure>
+    </div>
+  </div>
+
+  <section id="work">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2>Selected work</h2>
+        <p class="muted">Four projects that show how I build and ship gameplay systems in Unity. Each one links straight to its source on GitHub.</p>
+      </div>
+
+      <div class="featured">
+        <article class="feature">
+          <div class="feature-media has-video"><div class="video" data-yt="BwUqvsdftDM"><img src="https://i.ytimg.com/vi/BwUqvsdftDM/maxresdefault.jpg" onerror="this.onerror=null;this.src='assets/img/remains-logo.webp'" alt="Remains gameplay video thumbnail" loading="lazy" width="1280" height="720"><button type="button" aria-label="Play Remains video"><span><svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></span></button></div></div>
+          <div class="feature-body">
+            <div class="feature-meta"><span class="badge">On Steam</span><span>Team project, three months, 2025</span></div>
+            <h3><a href="projects/remains.html">Remains</a></h3>
+            <p>A small robot wakes up in a forest after the end of the world and explores it with a foam gun and a vacuum. I was the only programmer and the technical lead.</p>
+            <ul>
+              <li>Designed and wrote 17 modular gameplay systems, from spline-locked movement to enemy and NPC state machines and save/load.</li>
+              <li>Turned key objects into prefabs so a level designer new to Unity could build Level 1 without touching code.</li>
+              <li>Ran the GitHub repository and reviewed every pull request to keep the main branch stable.</li>
+            </ul>
+            <ul class="chips" aria-label="Technology"><li>Unity</li><li>C#</li><li>Splines</li><li>Timeline</li><li>Input System</li></ul>
+            <div class="btns">
+              <a class="btn primary small" href="projects/remains.html">Read case study</a>
+              <a class="btn small" href="https://github.com/KevinZijingLiu16/Remains" target="_blank" rel="noopener">GitHub repo</a>
+              <a class="btn small" href="https://store.steampowered.com/app/4129530/Remains/" target="_blank" rel="noopener">Steam page</a>
+            </div>
+          </div>
+        </article>
+
+        <article class="feature">
+          <div class="feature-media has-video"><div class="video" data-yt="ONgBo4TUfT0"><img src="assets/img/paperblast.webp" alt="Paper Blast key art: a character firing a blaster through torn pages of text" loading="lazy" width="944" height="657"><button type="button" aria-label="Play Paper Blast video"><span><svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></span></button></div></div>
+          <div class="feature-body">
+            <div class="feature-meta"><span class="badge quiet">In progress</span><span>Solo project, 2026</span></div>
+            <h3><a href="projects/paper-blast.html">Paper Blast</a></h3>
+            <p>A 2D platformer where any PDF you import becomes destructible terrain. You jump across lines of text and blast through paragraphs with rockets, lasers, a black hole and an eraser.</p>
+            <ul>
+              <li>Keeps the visible page and its pixel collision mask in sync, re-uploading only the chunks a blast changed.</li>
+              <li>Turns text lines into one-way platforms, with an image-based fallback for scanned pages.</li>
+              <li>Nine assembly modules with dependency rules enforced by tests, and more than 300 edit-mode tests.</li>
+            </ul>
+            <ul class="chips" aria-label="Technology"><li>Unity</li><li>C#</li><li>Docnet (PDF)</li><li>NUnit</li><li>Assembly definitions</li></ul>
+            <div class="btns">
+              <a class="btn primary small" href="projects/paper-blast.html">Read case study</a>
+              <a class="btn small" href="https://github.com/KevinZijingLiu16/KevinPaperBlast" target="_blank" rel="noopener">GitHub repo</a>
+              <a class="btn small" href="https://kevinzijingliu16.itch.io/paperblast" target="_blank" rel="noopener">Download on itch.io</a>
+            </div>
+          </div>
+        </article>
+
+        <article class="feature">
+          <div class="feature-media has-video"><div class="video" data-yt="DmjN8wEi2cM"><img src="assets/img/mannequin.webp" alt="Mannequin Escape: a mannequin dashing through an arena while the HUD tracks collected items and time left" loading="lazy" width="860" height="492"><button type="button" aria-label="Play Mannequin Escape video"><span><svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></span></button></div></div>
+          <div class="feature-body">
+            <div class="feature-meta"><span>Individual project, 2025</span></div>
+            <h3><a href="projects/mannequin-escape.html">Mannequin Escape</a></h3>
+            <p>Collect items before time runs out while other mannequins hunt you. Knock them back with energy waves or trip them with traps.</p>
+            <ul>
+              <li>Enemy AI with separate sight, hearing and hit senses that feed a patrol, chase and attack state machine.</li>
+              <li>Inventory, game manager and UI built on MVC so they can move into the next project unchanged.</li>
+              <li>Modelled, rigged and animated the character in Blender, then layered procedural animation on top in Unity.</li>
+            </ul>
+            <ul class="chips" aria-label="Technology"><li>Unity</li><li>C#</li><li>NavMesh</li><li>Blender</li><li>Animation Rigging</li></ul>
+            <div class="btns">
+              <a class="btn primary small" href="projects/mannequin-escape.html">Read case study</a>
+              <a class="btn small" href="https://github.com/KevinZijingLiu16/KevinMannequinEscape" target="_blank" rel="noopener">GitHub repo</a>
+              <a class="btn small" href="https://kevinzijingliu16.itch.io/mannequin-escape" target="_blank" rel="noopener">Play on itch.io</a>
+            </div>
+          </div>
+        </article>
+
+        <article class="feature">
+          <div class="feature-media has-video"><div class="video" data-yt="FiRBSWSIpNE"><img src="assets/img/beyblade.webp" alt="KL Beyblade World Cup: two spinning tops battling in an AR arena placed on a real floor" loading="lazy" width="987" height="847"><button type="button" aria-label="Play KL Beyblade World Cup video"><span><svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></span></button></div></div>
+          <div class="feature-body">
+            <div class="feature-meta"><span>Mobile, AR and online, 2025</span></div>
+            <h3>KL Beyblade World Cup</h3>
+            <p>An online spinning-top battle for Android. Players place the arena on a real surface with AR and fight each other over the network.</p>
+            <ul>
+              <li>Lobby, matchmaking and player selection on Photon PUN 2.</li>
+              <li>Custom Rigidbody synchronisation that predicts each remote top from its velocity and the measured network lag.</li>
+              <li>AR mode that places the arena on a real surface, plus touch joystick controls.</li>
+            </ul>
+            <ul class="chips" aria-label="Technology"><li>Unity</li><li>C#</li><li>Photon PUN 2</li><li>AR</li><li>Android</li></ul>
+            <div class="btns">
+              <a class="btn small" href="https://github.com/KevinZijingLiu16/KevinLouiseAR" target="_blank" rel="noopener">GitHub repo</a>
+              <a class="btn small" href="https://drive.google.com/file/d/1VDH2is3HLKzZyOCz_4px4Q7ZrrSHIYv4/view?usp=sharing" target="_blank" rel="noopener">Download APK</a>
+            </div>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section id="more">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2>Experiments and other engines</h2>
+        <p class="muted">Smaller builds where I tried new input methods, genres and tools.</p>
+      </div>
+      <div class="grid">
+        <article class="card">
+          <div class="video" data-yt="ahrJP-5d4i0"><img src="assets/img/hand-gesture.webp" alt="Hand Gesture Control demo" loading="lazy"><button type="button" aria-label="Play Hand Gesture Control video"><span><svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></span></button></div>
+          <div class="card-body">
+            <div class="title-row"><h3>Hand Gesture Control</h3><span class="year">Experiment</span></div>
+            <p>A prototype that steers gameplay with hand gestures instead of a controller. Programming.</p>
+            <div class="links"><a href="https://github.com/KevinZijingLiu16/KevinHandGestureTestGame" target="_blank" rel="noopener">GitHub</a></div>
+          </div>
+        </article>
+        <article class="card">
+          <div class="video" data-yt="X2G3MEA7--M"><img src="assets/img/spaceship.webp" alt="Spaceship Fight in Unreal Engine 5" loading="lazy"><button type="button" aria-label="Play Spaceship Fight video"><span><svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></span></button></div>
+          <div class="card-body">
+            <div class="title-row"><h3>Spaceship Fight</h3><span class="year">UE5</span></div>
+            <p>A space combat demo built in Unreal Engine 5 with Blueprints.</p>
+            <div class="links"><a href="https://github.com/KevinZijingLiu16/KevinUE5_SpaceshipBattle" target="_blank" rel="noopener">GitHub</a></div>
+          </div>
+        </article>
+        <article class="card">
+          <img src="assets/img/roguelike.webp" alt="Roguelike game for mobile and PC" loading="lazy">
+          <div class="card-body">
+            <div class="title-row"><h3>Roguelike</h3><span class="year">Ongoing</span></div>
+            <p>A roguelike for mobile and PC. Game design and programming.</p>
+            <div class="links"><a href="https://github.com/KevinZijingLiu16/KevinRoguelikeGame" target="_blank" rel="noopener">GitHub</a></div>
+          </div>
+        </article>
+        <article class="card">
+          <div class="video" data-yt="OBTetNc2gpI"><img src="assets/img/shadow-jump.webp" alt="Shadow Jump demo in the Unity editor" loading="lazy"><button type="button" aria-label="Play Shadow Jump video"><span><svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></span></button></div>
+          <div class="card-body">
+            <div class="title-row"><h3>Shadow Jump</h3><span class="year">Experiment</span></div>
+            <p>A small mechanics demo. Programming.</p>
+            <div class="links"></div>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section id="jams">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2>Game jams</h2>
+        <p class="muted">Weekend builds with teams I met on the day. Good practice for scoping hard and shipping anyway.</p>
+      </div>
+      <div class="grid">
+        <article class="card">
+          <div class="video" data-yt="B6_Wcf-z10U"><img src="assets/img/stairs.webp" alt="Stairs Through Time title screen" loading="lazy"><button type="button" aria-label="Play Stairs Through Time video"><span><svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></span></button></div>
+          <div class="card-body">
+            <div class="title-row"><h3>Stairs Through Time</h3><span class="year">2026</span></div>
+            <p>JYU Game Jam 2026. Programmer, game design and implementation. Includes a technical design flowchart.</p>
+            <div class="links"><a href="https://github.com/KevinZijingLiu16/JYU_GameJam_Stairs" target="_blank" rel="noopener">GitHub</a><a href="https://kevinzijingliu16.itch.io/stairs-through-time" target="_blank" rel="noopener">Play</a><a href="https://drive.google.com/file/d/11wpL58JyYJrIfrfbE7PN4JW4fR7panIl/view?usp=sharing" target="_blank" rel="noopener">Flowchart</a></div>
+          </div>
+        </article>
+        <article class="card">
+          <div class="video" data-yt="fQKchQxzH9Q"><img src="assets/img/hammer.webp" alt="Hammer Throw Hero title art" loading="lazy"><button type="button" aria-label="Play Hammer Throw Hero video"><span><svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></span></button></div>
+          <div class="card-body">
+            <div class="title-row"><h3>Hammer Throw Hero</h3><span class="year">2025</span></div>
+            <p>Boss Rush Game Jam 2025. Programmer and UI design. Team repository; I can walk through my part on request.</p>
+            <div class="links"><a href="https://hammerthrowhero.itch.io/hammer-throw-hero" target="_blank" rel="noopener">Play</a></div>
+          </div>
+        </article>
+        <article class="card">
+          <div class="video" data-yt="hoZmewEIPrs"><img src="assets/img/control-weight.webp" alt="Control Your Weight title screen" loading="lazy"><button type="button" aria-label="Play Control Your Weight video"><span><svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></span></button></div>
+          <div class="card-body">
+            <div class="title-row"><h3>Control Your Weight</h3><span class="year">2024</span></div>
+            <p>GMTK Game Jam 2024, theme "Built to Scale". Game design, programming, animation and level design.</p>
+            <div class="links"><a href="https://github.com/KevinZijingLiu16/GMTK_GameJam2024" target="_blank" rel="noopener">GitHub</a><a href="https://kevinzijingliu16.itch.io/control-your-weight" target="_blank" rel="noopener">Play</a></div>
+          </div>
+        </article>
+        <article class="card">
+          <div class="video" data-yt="HNSmyQnsI9s"><img src="assets/img/sushimulator.webp" alt="Sushimulator title screen" loading="lazy"><button type="button" aria-label="Play Sushimulator video"><span><svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></span></button></div>
+          <div class="card-body">
+            <div class="title-row"><h3>Sushimulator</h3><span class="year">2024</span></div>
+            <p>Global Game Jam 2024. Game design and programming.</p>
+            <div class="links"><a href="https://github.com/kasperbc/sokeritee-fgj24" target="_blank" rel="noopener">GitHub</a><a href="https://kevinzijingliu16.itch.io/sushimulator" target="_blank" rel="noopener">Play</a><a href="https://globalgamejam.org/games/2024/sushimulator-6" target="_blank" rel="noopener">GGJ page</a></div>
+          </div>
+        </article>
+        <article class="card">
+          <div class="video" data-yt="-_N8m1pFr8s"><img src="assets/img/dark-scroll.webp" alt="The Dark Scroll cover art" loading="lazy"><button type="button" aria-label="Play The Dark Scroll video"><span><svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></span></button></div>
+          <div class="card-body">
+            <div class="title-row"><h3>The Dark Scroll</h3><span class="year">2023</span></div>
+            <p><span class="badge">People's Choice Award</span></p>
+            <p>EXPA Game Jam 2023. Game design, programming, animation and level design.</p>
+            <div class="links"><a href="https://github.com/malconvoker/GameJamSideScroller" target="_blank" rel="noopener">GitHub</a><a href="https://mcturbo.itch.io/the-dark-scroll" target="_blank" rel="noopener">Play</a></div>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section id="demos">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2>Earlier demos</h2>
+        <p class="muted">Course and practice projects from my first two years of study.</p>
+      </div>
+      <div class="grid">
+        <article class="card">
+          <div class="video" data-yt="I52xFdEm4nY"><img src="assets/img/tank.webp" alt="2D Tank Battle screenshot" loading="lazy"><button type="button" aria-label="Play 2D Tank Battle video"><span><svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></span></button></div>
+          <div class="card-body">
+            <h3>2D Tank Battle</h3>
+            <p>Online multiplayer with host, client and lobby. Game design and programming.</p>
+            <div class="links"><a href="https://github.com/KevinZijingLiu16/OnlineGameProgrammingKevin2DTankBattle" target="_blank" rel="noopener">GitHub</a></div>
+          </div>
+        </article>
+        <article class="card">
+          <div class="video" data-yt="hLsiD9iw_Q8"><img src="assets/img/npc.webp" alt="NPC: No Pressure Company screenshot" loading="lazy"><button type="button" aria-label="Play NPC: No Pressure Company video"><span><svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></span></button></div>
+          <div class="card-body">
+            <h3>NPC: No Pressure Company</h3>
+            <p>Group concept with weather and quest systems. Game design and programming.</p>
+            <div class="links"><a href="https://github.com/KevinZijingLiu16/GameEngine-GameConceptGroup" target="_blank" rel="noopener">GitHub</a></div>
+          </div>
+        </article>
+        <article class="card">
+          <div class="video" data-yt="GadSRFnV4m8"><img src="assets/img/hero-rpg.webp" alt="2D Hero RPG screenshot" loading="lazy"><button type="button" aria-label="Play 2D Hero RPG video"><span><svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></span></button></div>
+          <div class="card-body">
+            <h3>2D Hero RPG</h3>
+            <p>Side-scrolling action RPG. Game design and programming.</p>
+            <div class="links"><a href="https://github.com/KevinZijingLiu16/2DHeroRPG" target="_blank" rel="noopener">GitHub</a></div>
+          </div>
+        </article>
+        <article class="card">
+          <div class="video" data-yt="wshnGRMlqwE"><img src="assets/img/frogi.webp" alt="Frogi Jump screenshot" loading="lazy"><button type="button" aria-label="Play Frogi Jump video"><span><svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></span></button></div>
+          <div class="card-body">
+            <h3>Frogi Jump</h3>
+            <p>Sprint-week team game. Design, programming, animation, level design and project management.</p>
+            <div class="links"><a href="https://github.com/KevinZijingLiu16/Group5_SprintWeek_FrogJump" target="_blank" rel="noopener">GitHub</a><a href="https://kevinzijingliu16.itch.io/frogi-jump" target="_blank" rel="noopener">Play</a></div>
+          </div>
+        </article>
+        <article class="card">
+          <div class="video" data-yt="AOMJct2_u58"><img src="assets/img/mr-square.webp" alt="Mr. Square screenshot" loading="lazy"><button type="button" aria-label="Play Mr. Square video"><span><svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></span></button></div>
+          <div class="card-body">
+            <h3>Mr. Square</h3>
+            <p>My first-semester final project. Everything from design to level building.</p>
+            <div class="links"><a href="https://github.com/KevinZijingLiu16/AE0672_2D_MrSquare" target="_blank" rel="noopener">GitHub</a><a href="https://kevinzijingliu16.itch.io/mr-square" target="_blank" rel="noopener">Play</a></div>
+          </div>
+        </article>
+        <article class="card">
+          <img src="assets/img/mobile-game.webp" alt="Mobile Game V0.1 screenshot" loading="lazy">
+          <div class="card-body">
+            <h3>Mobile Game V0.1</h3>
+            <p>Android prototype. Game design and programming.</p>
+            <div class="links"><a href="https://github.com/KevinZijingLiu16/KevinMobileGame" target="_blank" rel="noopener">GitHub</a><a href="https://drive.google.com/file/d/1bTSFt43aKf01YIzjS6HeW88WJtqtHOpX/view" target="_blank" rel="noopener">APK</a></div>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section id="skills">
+    <div class="wrap">
+      <div class="sec-head"><h2>What I work with</h2></div>
+      <div class="skills">
+        <div><h3>Engines and languages</h3><ul><li>Unity (main engine)</li><li>C#</li><li>Unreal Engine 5, Blueprints</li><li>Python</li></ul></div>
+        <div><h3>Gameplay systems</h3><ul><li>State machines and enemy/NPC AI</li><li>Pathfinding (NavMesh, A*)</li><li>Character controllers and physics</li><li>Inventory, save/load, UI</li></ul></div>
+        <div><h3>Platforms</h3><ul><li>PC and mobile</li><li>AR and VR</li><li>Online multiplayer (Photon PUN 2)</li><li>PS5 development</li></ul></div>
+        <div><h3>Practice</h3><ul><li>SOLID and clean C#</li><li>Edit-mode unit tests (NUnit)</li><li>Git, pull request review</li><li>Technical design docs, Scrum</li></ul></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="github">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2>Latest on GitHub</h2>
+        <p class="muted">Pulled live from my GitHub profile, most recently updated first.</p>
+      </div>
+      <div class="repos" id="repo-list" data-user="KevinZijingLiu16">
+        <a class="repo" href="https://github.com/KevinZijingLiu16?tab=repositories" target="_blank" rel="noopener"><strong>All repositories on GitHub</strong><span>github.com/KevinZijingLiu16</span></a>
+      </div>
+    </div>
+  </section>
+
+  <section id="contact">
+    <div class="wrap contact">
+      <div class="sec-head" style="margin-bottom:0">
+        <h2>Get in touch</h2>
+        <p class="muted">I'm looking for Unity developer and gameplay programmer roles. Email or LinkedIn reach me fastest.</p>
+      </div>
+      <dl>
+        <dt>Email</dt><dd><a href="mailto:liuzijingliu1601@gmail.com">liuzijingliu1601@gmail.com</a></dd>
+        <dt>Phone</dt><dd><a href="tel:+358413272076">+358 41 327 2076</a></dd>
+        <dt>LinkedIn</dt><dd><a href="https://www.linkedin.com/in/kevin-liu-5631882b5/" target="_blank" rel="noopener">linkedin.com/in/kevin-liu-5631882b5</a></dd>
+        <dt>GitHub</dt><dd><a href="https://github.com/KevinZijingLiu16" target="_blank" rel="noopener">github.com/KevinZijingLiu16</a></dd>
+        <dt>itch.io</dt><dd><a href="https://kevinzijingliu16.itch.io/" target="_blank" rel="noopener">kevinzijingliu16.itch.io</a></dd>
+      </dl>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <span>Kevin (Zijing) Liu, Jyväskylä, Finland</span>
+    <nav aria-label="Footer"><a href="https://github.com/KevinZijingLiu16" target="_blank" rel="noopener">GitHub</a><a href="https://www.linkedin.com/in/kevin-liu-5631882b5/" target="_blank" rel="noopener">LinkedIn</a><a href="assets/docs/zijing-liu-cv.pdf" target="_blank" rel="noopener">CV</a></nav>
+  </div>
+</footer>
+<script src="assets/js/site.js"></script>
+</body>
+</html>

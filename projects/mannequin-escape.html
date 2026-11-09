@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mannequin Escape Case Study</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Mannequin Escape: a Unity chase game with sense-based enemy AI, procedural animation and Blender character work by Kevin Liu.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,400..800&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="../assets/css/site.css">
+</head>
+<body>
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="../index.html">Kevin Liu<span>.</span></a>
+    <nav class="nav" aria-label="Main">
+      <a href="../index.html#work">Work</a>
+      <a href="../about.html">About</a>
+      <a href="../assets/docs/zijing-liu-cv.pdf" target="_blank" rel="noopener">CV</a>
+      <a href="https://github.com/KevinZijingLiu16" target="_blank" rel="noopener">GitHub</a>
+      <a href="../index.html#contact">Contact</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="case-hero">
+    <div class="wrap">
+      <p class="crumb"><a href="../index.html#work">Selected work</a> / Mannequin Escape</p>
+      <h1>Mannequin Escape</h1>
+      <p class="lede">You are a mannequin. Collect a set number of items before time runs out while the other mannequins chase you. Knock them away with energy waves, or set traps to trip them up.</p>
+      <dl class="facts">
+        <div><dt>Role</dt><dd>Programming, design, 3D model and animation</dd></div>
+        <div><dt>Engine</dt><dd>Unity, C#, Blender</dd></div>
+        <div><dt>Focus</dt><dd>Enemy AI, procedural animation</dd></div>
+        <div><dt>Year</dt><dd>2025</dd></div>
+      </dl>
+      <div class="btns">
+        <a class="btn primary" href="https://github.com/KevinZijingLiu16/KevinMannequinEscape" target="_blank" rel="noopener">View code on GitHub</a>
+        <a class="btn" href="https://kevinzijingliu16.itch.io/mannequin-escape" target="_blank" rel="noopener">Play on itch.io</a>
+        <a class="btn" href="../assets/docs/mannequin-escape-tech-design.pdf" target="_blank" rel="noopener">Technical design (PDF)</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="case-body">
+    <div class="wrap">
+      <div class="two">
+        <div>
+          <div class="video" data-yt="DmjN8wEi2cM">
+            <img src="https://i.ytimg.com/vi/DmjN8wEi2cM/maxresdefault.jpg" onerror="this.onerror=null;this.src='../assets/img/mannequin.webp'" alt="" width="1280" height="720">
+            <button type="button" aria-label="Play Mannequin Escape gameplay video"><span><svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></span></button>
+          </div>
+          <p class="video-note">Gameplay video. <a href="https://youtu.be/DmjN8wEi2cM" target="_blank" rel="noopener">Open on YouTube</a></p>
+        </div>
+        <div class="prose">
+          <h2>What I did</h2>
+          <ul>
+            <li>Planned the technical design and designed all of the gameplay mechanics.</li>
+            <li>Wrote all of the code: game manager, inventory, enemy AI, player interaction and UI.</li>
+            <li>Modelled, rigged and animated the character in Blender.</li>
+            <li>Added procedural animation in Unity, driven by a state machine.</li>
+            <li>Managed the GitHub repository.</li>
+          </ul>
+          <p>This was the first project where I applied SOLID and clean C# from the start. The game manager, inventory and enemy AI became foundations I have reused since.</p>
+        </div>
+      </div>
+
+      <div class="block">
+        <h2>Enemies that sense, remember and forget</h2>
+        <div class="two">
+          <div class="prose">
+            <p>Each enemy carries a perception component made of separate senses: sight, hearing (a noise system the player triggers) and hit. Every sense is its own component that answers one question: can I sense this stimulus right now?</p>
+            <p>The shared base class handles the rest. When a stimulus is lost, a short memory timer starts before the enemy forgets it, so a player who ducks behind a wall for a second is still hunted. The perception component then picks the strongest current target and raises an event.</p>
+            <p>The enemy state machine listens to that event and moves between idle, patrol, chase and attack. Frozen and ragdoll states handle traps and energy-wave hits.</p>
+          </div>
+          <div class="code">
+            <div class="code-head"><span>Enemy/AIPerception/SightSense.cs (tidied)</span><a href="https://github.com/KevinZijingLiu16/KevinMannequinEscape/blob/main/Assets/SprintWeek/Scripts/Enemy/AIPerception/SightSense.cs" target="_blank" rel="noopener">Full file</a></div>
+<pre><code class="language-csharp">public class SightSense : SenseComponent
+{
+    [SerializeField] private float sightDistance = 20f;
+    [SerializeField] private float sightHalfAngle = 45f;
+    [SerializeField] private float eyeHeight = 1.5f;
+
+    protected override bool IsStimuliSensable(PerceptionStimuli stimuli)
+    {
+        Vector3 toStimuli = stimuli.transform.position - transform.position;
+
+        // 1. Close enough?
+        if (toStimuli.magnitude &gt; sightDistance) return false;
+
+        // 2. Inside the view cone?
+        Vector3 dir = toStimuli.normalized;
+        if (Vector3.Angle(transform.forward, dir) &gt; sightHalfAngle) return false;
+
+        // 3. Nothing blocking the line of sight?
+        Vector3 eye = transform.position + Vector3.up * eyeHeight;
+        if (Physics.Raycast(eye, dir, out RaycastHit hit, sightDistance)
+            &amp;&amp; hit.collider.gameObject != stimuli.gameObject)
+            return false;
+
+        return true;
+    }
+}</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="block">
+        <h2>Where the patterns live</h2>
+        <dl class="patterns">
+          <div><dt>Template method</dt><dd><code>SenseComponent</code> runs the sense, remember and forget loop; each sense only overrides <code>IsStimuliSensable</code>.</dd></div>
+          <div><dt>Composite</dt><dd><code>PerceptionComponent</code> combines any number of senses into one target.</dd></div>
+          <div><dt>Observer</dt><dd>Senses, perception and the state machine talk through C# events, so none of them reference each other directly.</dd></div>
+          <div><dt>State</dt><dd>Enemy states (idle, patrol, chase, attack, frozen, ragdoll) and the player's environment-interaction states.</dd></div>
+          <div><dt>MVC</dt><dd>Inventory model, UI controller and slot views are separate, with drag-and-drop and tooltips on the view side.</dd></div>
+          <div><dt>Component and strategy</dt><dd>Behaviour is assembled from small interchangeable components in the inspector.</dd></div>
+        </dl>
+      </div>
+
+      <div class="block">
+        <h2>Character and procedural animation</h2>
+        <div class="two">
+          <figure>
+            <img src="../assets/img/mannequin-anim.webp" alt="Mannequin character animations in Blender and the Unity editor" loading="lazy" width="578" height="569">
+            <figcaption>Model, rig and animation set made in Blender.</figcaption>
+          </figure>
+          <div class="prose">
+            <p>I modelled, rigged and animated the mannequin in Blender, then brought it into Unity.</p>
+            <p>On top of the baked animation, a second state machine drives two-bone IK on the arms. When the character walks past an object, it finds the closest point on the surface from its shoulder. If that point is within reach, the arm rises, touches the surface and returns to its pose. It is a small detail, and it made the mannequin feel aware of the space around it.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="block">
+        <h2>Technical design</h2>
+        <figure>
+          <a href="https://www.figma.com/board/AXBljf8bq5lVHqLwYM3JYQ/KevinMannequinEscapeTechDesign?node-id=0-1" target="_blank" rel="noopener"><img src="../assets/img/mannequin-flowchart.webp" alt="Mannequin Escape technical design flowchart" loading="lazy" width="1378" height="758"></a>
+          <figcaption>System flowchart. <a href="https://www.figma.com/board/AXBljf8bq5lVHqLwYM3JYQ/KevinMannequinEscapeTechDesign?node-id=0-1" target="_blank" rel="noopener">Open in Figma</a> or <a href="../assets/docs/mannequin-escape-tech-design.pdf" target="_blank" rel="noopener">read the design document (PDF)</a>.</figcaption>
+        </figure>
+      </div>
+
+      <nav class="next" aria-label="More projects">
+        <a href="paper-blast.html">Previous: Paper Blast</a>
+        <a href="../index.html#work">All projects</a>
+      </nav>
+    </div>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <span>Kevin (Zijing) Liu, Jyväskylä, Finland</span>
+    <nav aria-label="Footer"><a href="https://github.com/KevinZijingLiu16" target="_blank" rel="noopener">GitHub</a><a href="https://www.linkedin.com/in/kevin-liu-5631882b5/" target="_blank" rel="noopener">LinkedIn</a><a href="mailto:liuzijingliu1601@gmail.com">Email</a></nav>
+  </div>
+</footer>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="../assets/js/site.js"></script>
+</body>
+</html>
